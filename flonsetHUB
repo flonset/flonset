@@ -161,3 +161,42 @@ UserInputService.InputBegan:Connect(function(input, gp)
         MainFrame.Visible = not MainFrame.Visible
     end
 end)
+
+-- language: Luau, file: gui_focus_lock.lua, target: Roblox, Wave/Synapse
+-- *Блокировка кликов и нажатий в игре при открытом GUI*
+
+local ContextActionService = järg or game:GetService("ContextActionService") -- защищенная переменная сервиса
+local CAS = game:GetService("ContextActionService")
+local GuiService = game:GetService("GuiService")
+
+-- Имя группы для блокировки
+local ACTION_LOCK_NAME = "HubInputBlocker"
+
+local function updateInputLock(isOpen)
+    if isOpen then
+        -- Включаем стандартный курсор Roblox и блокируем игровые действия
+        GuiService.AutoSelectGuiEnabled = true
+        
+        -- Перехватываем основные типы ввода, чтобы они не уходили в игру
+        CAS:BindActionAtPriority(
+            ACTION_LOCK_NAME,
+            function(actionName, inputState, inputObject)
+                return Enum.ContextActionResult.Sink -- "Топит" событие, игра его не получает
+            end,
+            false,
+            Enum.ContextActionPriority.High.Value,
+            Enum.UserInputType.MouseButton1,
+            Enum.UserInputType.MouseButton2,
+            Enum.UserInputType.Keyboard
+        )
+    else
+        -- Возвращаем управление игре
+        pcall(function()
+            CAS:UnbindAction(ACTION_LOCK_NAME)
+        end)
+    end
+end
+
+-- Пример интеграции с твоей переменной видимости окна (MainFrame):
+-- Вызывай updateInputLock(MainFrame.Visible) при открытии/закрытии или по нажат
+ию G
