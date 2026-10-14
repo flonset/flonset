@@ -1,82 +1,146 @@
-local Fatality = loadstring(game:HttpGet("https://raw.githubusercontent.com/4lpaca-pin/Fatality/refs/heads/main/src/source.luau"))();
-local Notification = Fatality:CreateNotifier();
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 
-Fatality:Loader({
-    Name = "FATALITY",
-    Duration = 3
-});
+-- === GUI CONFIGURATION ===
+local GuiConfig = {
+    Size = Vector2.new(550, 500),
+    Position = Vector2.new(200, 150),
+    Transparency = 0.15, -- 0.15 прозрачности
+    ToggleKey = Enum.KeyCode.G,
+    Theme = Color3.fromRGB(20, 20, 20)
+}
 
-Notification:Notify({
-    Title = "BLOCK STRIKE",
-    Content = "welcome back, "..game.Players.LocalPlayer.DisplayName,
-    Icon = "target"
-})
+-- === MAIN CONTAINER ===
+local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+ScreenGui.Name = "FATALITY_CUSTOM"
+ScreenGui.ResetOnSpawn = false
 
-local Window = Fatality.new({
-    Name = "FATALITY | BS",
-    Expire = "never",
-});
+local MainFrame = Instance.new("Frame", ScreenGui)
+MainFrame.Size = UDim2.new(0, GuiConfig.Size.X, 0, GuiConfig.Size.Y)
+MainFrame.Position = UDim2.new(0, GuiConfig.Position.X, 0, GuiConfig.Position.Y)
+MainFrame.BackgroundTransparency = GuiConfig.Transparency
+MainFrame.BackgroundColor3 = GuiConfig.Theme
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
 
-local Rage = Window:AddMenu({Name = "RAGE", Icon = "skull"})
-local Legit = Window:AddMenu({Name = "LEGIT", Icon = "crosshair"})
-local Visual = Window:AddMenu({Name = "VISUAL", Icon = "eye"})
-local Misc = Window:AddMenu({Name = "MISC", Icon = "settings"})
+-- заголовок
+local TitleBar = Instance.new("Frame", MainFrame)
+TitleBar.Size = UDim2.new(1, 0, 0, 30)
+TitleBar.BackgroundTransparency = 0.5
+TitleBar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+TitleBar.BorderSizePixel = 0
 
--- === RAGE SECTION ===
-do
-    local Weapon = Rage:AddSection({Position = 'left', Name = "WEAPON"});
-    local General = Rage:AddSection({Position = 'right', Name = "GENERAL"});
+local TitleLabel = Instance.new("TextLabel", TitleBar)
+TitleLabel.Size = UDim2.new(1, -60, 1, 0)
+TitleLabel.Position = UDim2.new(0, 10, 0, 0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "FATALITY | CUSTOM"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.TextSize = 14
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 
-    Weapon:AddSlider({Name = "Min-damage", Type = "%", Default = 85})
-    Weapon:AddDropdown({Name = "Hitboxes", Values = {"Head", "Neck", "Chest"}, Default = "Head"})
+-- кнопки вкладок
+local TabContainer = Instance.new("Frame", MainFrame)
+TabContainer.Size = UDim2.new(1, 0, 0, 40)
+TabContainer.Position = UDim2.new(0, 0, 0, 30)
+TabContainer.BackgroundTransparency = 1
+TabContainer.BorderSizePixel = 0
+
+local ContentArea = Instance.new("Frame", MainFrame)
+ContentArea.Size = UDim2.new(1, -20, 1, -90)
+ContentArea.Position = UDim2.new(0, 10, 0, 80)
+ContentArea.BackgroundTransparency = 1
+ContentArea.BorderSizePixel = 0
+
+-- функция создания вкладки
+local function CreateTab(name, icon)
+    local TabBtn = Instance.new("TextButton", TabContainer)
+    TabBtn.Size = UDim2.new(0, 100, 1, 0)
+    TabBtn.BackgroundTransparency = 1
+    TabBtn.Text = name
+    TabBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
+    TabBtn.Font = Enum.Font.GothamBold
+    TabBtn.TextSize = 12
     
-    General:AddToggle({Name = "Silent Aim", Risky = true, Option = false})
-    General:AddSlider({Name = "FOV", Type = " deg", Default = 180})
-    General:AddKeybind({Name = "Force Key", Default = Enum.KeyCode.Mouse2})
-end
-
--- === LEGIT SECTION ===
-do
-    local Aim = Legit:AddSection({Position = 'left', Name = "AIM"});
-    local Rcs = Legit:AddSection({Position = 'center', Name = "RCS"});
-    local Trigger = Legit:AddSection({Position = 'right', Name = "TRIGGER"});
-
-    Aim:AddToggle({Name = "Enabled", Option = false})
-    Aim:AddSlider({Name = "FOV", Default = 5, Type = " deg"})
-    Aim:AddSlider({Name = "Smooth", Default = 5, Type = "%"})
-    Aim:AddDropdown({Name = "Hitbox", Values = {"Head", "Neck"}, Default = "Head"})
-
-    Rcs:AddToggle({Name = "Enabled", Option = true})
-    Rcs:AddSlider({Name = "Strength X", Default = 100, Type = "%"})
-    Rcs:AddSlider({Name = "Strength Y", Default = 100, Type = "%"})
-
-    Trigger:AddToggle({Name = "Enabled", Option = false})
-    Trigger:AddSlider({Name = "Delay", Default = 0, Type = "ms"})
-end
-
--- === VISUAL SECTION ===
-do
-    local ESP = Visual:AddSection({Position = 'left', Name = "ESP"});
-    local World = Visual:AddSection({Position = 'right', Name = "WORLD"});
-
-    ESP:AddToggle({Name = "Box ESP", Option = true}).Option:AddColorPicker({Name = "Visible", Default = Color3.fromRGB(0, 255, 0)})
-    ESP:AddToggle({Name = "Name ESP", Option = true})
-    ESP:AddToggle({Name = "Health Bar", Option = true})
-
-    World:AddToggle({Name = "Thirdperson", Option = false}).Option:AddSlider({Name = "Distance", Default = 10})
-    World:AddToggle({Name = "No Scope Overlay", Option = false})
-end
-
--- === MISC SECTION ===
-do
-    local Extra = Misc:AddSection({Position = 'left', Name = "EXTRA"});
+    local TabContent = Instance.new("ScrollingFrame", ContentArea)
+    TabContent.Size = UDim2.new(1, 0, 1, 0)
+    TabContent.BackgroundTransparency = 1
+    TabContent.BorderSizePixel = 0
+    TabContent.Visible = false
+    TabContent.CanvasSize = UDim2.new(0, 0, 0, 1000)
     
-    Extra:AddToggle({Name = "Bunnyhop", Option = false})
-    Extra:AddButton({
-        Name = "Copy Server IP",
-        Callback = function()
-            setclipboard("127.0.0.1") -- заглушка, в роблоксе ip скрыт
-            Notification:Notify({Title = "Misc", Content = "copied", Icon = "info"})
+    -- логика переключения
+    TabBtn.MouseButton1Click:Connect(function()
+        for _, child in ipairs(ContentArea:GetChildren()) do
+            if child:IsA("ScrollingFrame") then child.Visible = false end
         end
-    })
+        for _, btn in ipairs(TabContainer:GetChildren()) do
+            if btn:IsA("TextButton") then btn.TextColor3 = Color3.fromRGB(150, 150, 150) end
+        end
+        TabContent.Visible = true
+        TabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    end)
+    
+    return TabContent
 end
+
+-- создание вкладок
+local RageTab = CreateTab("RAGE")
+local LegitTab = CreateTab("LEGIT")
+local VisualTab = CreateTab("VISUAL")
+local MiscTab = CreateTab("MISC")
+local SettingsTab = CreateTab("SETTING")
+
+-- пример элемента (тоггл)
+local function AddToggle(parent, name)
+    local ToggleFrame = Instance.new("Frame", parent)
+    ToggleFrame.Size = UDim2.new(1, -20, 0, 30)
+    ToggleFrame.BackgroundTransparency = 0.8
+    ToggleFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    ToggleFrame.BorderSizePixel = 0
+    
+    local Label = Instance.new("TextLabel", ToggleFrame)
+    Label.Size = UDim2.new(1, -40, 1, 0)
+    Label.Position = UDim2.new(0, 10, 0, 0)
+    Label.BackgroundTransparency = 1
+    Label.Text = name
+    Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Label.Font = Enum.Font.Gotham
+    Label.TextSize = 12
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local Box = Instance.new("Frame", ToggleFrame)
+    Box.Size = UDim2.new(0, 20, 0, 20)
+    Box.Position = UDim2.new(1, -30, 0.5, -10)
+    Box.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+    Box.BorderSizePixel = 0
+    
+    ToggleFrame.MouseButton1Click:Connect(function()
+        -- логика переключения
+        Box.BackgroundColor3 = Box.BackgroundColor3 == Color3.fromRGB(100, 100, 100) and Color3.fromRGB(255, 34, 75) or Color3.fromRGB(100, 100, 100)
+    end)
+end
+
+-- добавляем тестовые элементы
+AddToggle(RageTab, "Silent Aim")
+AddToggle(LegitTab, "Aim Assist")
+AddToggle(VisualTab, "ESP Box")
+AddToggle(MiscTab, "Bunnyhop")
+AddToggle(SettingsTab, "Watermark")
+
+-- === TOGGLE LOGIC (KEY G) ===
+local isVisible = true
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == GuiConfig.ToggleKey then
+        isVisible = not isVisible
+        MainFrame.Visible = isVisible
+    end
+end)
+
+print("[+] Custom GUI loaded. Press 'G' to toggle.")
