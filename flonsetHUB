@@ -1,250 +1,178 @@
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
-
-local Window = OrionLib:MakeWindow({Name = "FATALITY | REBORN", HidePremium = false, SaveConfig = true, ConfigFolder = "FatalityReborn"})
-
--- === ВКЛАДКИ ===
-local RageTab = Window:MakeTab({
-	Name = "RAGE",
-	Icon = "rbxassetid://4483345998",
-	PremiumOnly = false
-})
-
-local LegitTab = Window:MakeTab({
-	Name = "LEGIT",
-	Icon = "rbxassetid://4483345148",
-	PremiumOnly = false
-})
-
-local VisualTab = Window:MakeTab({
-	Name = "VISUAL",
-	Icon = "rbxassetid://4483344428",
-	PremiumOnly = false
-})
-
-local MiscTab = Window:MakeTab({
-	Name = "MISC",
-	Icon = "rbxassetid://4483344000",
-	PremiumOnly = false
-})
-
--- === RAGE SECTION ===
-RageTab:AddSection("WEAPON")
-RageTab:AddSlider({
-	Name = "Hit-chance",
-	Min = 0,
-	Max = 100,
-	Default = 61,
-	Color = Color3.fromRGB(255,255,255),
-	Increment = 1,
-	Callback = function(Value)
-		print("Hit-chance set to: " .. Value)
-	end	
-})
-RageTab:AddSlider({
-	Name = "Min-damage",
-	Min = 0,
-	Max = 100,
-	Default = 85,
-	Color = Color3.fromRGB(255,255,255),
-	Increment = 1,
-	Callback = function(Value)
-		print("Min-damage set to: " .. Value)
-	end	
-})
-RageTab:AddDropdown({
-	Name = "Hitboxes",
-	CurrentOption = {"Head"},
-	MultipleOptions = true,
-	Options = {"Head", "Neck", "Arms", "Legs"}
-})
-
-RageTab:AddSection("GENERAL")
-RageTab:AddToggle({
-	Name = "Aimbot",
-	Default = false,
-	Callback = function(Value)
-		print("Aimbot toggled: " .. tostring(Value))
-	end	
-})
-RageTab:AddToggle({
-	Name = "Silent Aim",
-	Default = false,
-	Callback = function(Value)
-		print("Silent Aim toggled: " .. tostring(Value))
-	end	
-})
-RageTab:AddSlider({
-	Name = "Maximum FOV",
-	Min = 0,
-	Max = 360,
-	Default = 180,
-	Color = Color3.fromRGB(255,255,255),
-	Increment = 1,
-	Callback = function(Value)
-		print("FOV set to: " .. Value)
-	end	
-})
-RageTab:AddToggle({
-	Name = "Autofire",
-	Default = false,
-	Callback = function(Value)
-		print("Autofire toggled: " .. tostring(Value))
-	end	
-})
-
--- === LEGIT SECTION ===
-LegitTab:AddSection("AIM ASSIST")
-LegitTab:AddToggle({
-	Name = "Enabled",
-	Default = false,
-	Callback = function(Value)
-		print("Aim Assist enabled: " .. tostring(Value))
-	end	
-})
-LegitTab:AddSlider({
-	Name = "FOV",
-	Min = 0,
-	Max = 360,
-	Default = 5,
-	Color = Color3.fromRGB(255,255,255),
-	Increment = 1,
-	Callback = function(Value)
-		print("Aim FOV set to: " .. Value)
-	end	
-})
-LegitTab:AddSlider({
-	Name = "Smoothness",
-	Min = 1,
-	Max = 20,
-	Default = 5,
-	Color = Color3.fromRGB(255,255,255),
-	Increment = 1,
-	Callback = function(Value)
-		print("Smoothness set to: " .. Value)
-	end	
-})
-
-LegitTab:AddSection("RECOIL CONTROL")
-LegitTab:AddToggle({
-	Name = "RCS Enabled",
-	Default = true,
-	Callback = function(Value)
-		print("RCS enabled: " .. tostring(Value))
-	end	
-})
-
--- === VISUAL SECTION (С ESP) ===
-VisualTab:AddSection("ESP")
-VisualTab:AddToggle({
-	Name = "Player ESP",
-	Default = false,
-	Callback = function(Value)
-		ESP_Settings.Enabled = Value
-	end	
-})
-VisualTab:AddColorPicker({
-	Name = "ESP Color",
-	Default = Color3.fromRGB(255, 34, 75),
-	Callback = function(Value)
-		ESP_Settings.Color = Value
-	end
-})
-VisualTab:AddToggle({
-	Name = "Show Names",
-	Default = true,
-	Callback = function(Value)
-		ESP_Settings.ShowNames = Value
-	end	
-})
-
-VisualTab:AddSection("WORLD")
-VisualTab:AddToggle({
-	Name = "Thirdperson",
-	Default = false,
-	Callback = function(Value)
-		if Value then
-			workspace.CurrentCamera.CameraSubject = workspace.CurrentCamera
-		else
-			workspace.CurrentCamera.CameraSubject = game.Players.LocalPlayer.Character.Humanoid
-		end
-	end	
-})
-
--- === MISC SECTION ===
-MiscTab:AddSection("EXTRA")
-MiscTab:AddToggle({
-	Name = "Bunnyhop",
-	Default = false,
-	Callback = function(Value)
-		print("Bunnyhop: " .. tostring(Value))
-	end	
-})
-MiscTab:AddKeybind({
-	Name = "Menu Toggle",
-	Key = Enum.KeyCode.G,
-	Callback = function()
-		print("Menu key pressed")
-	end	
-})
-
--- === ESP LOGIC CORE ===
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local Camera = workspace.CurrentCamera
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Camera = workspace.CurrentCamera
 
-ESP_Settings = {
-	Enabled = false,
-	ShowNames = true,
-	Color = Color3.fromRGB(255, 34, 75),
-	Objects = {}
-}
+-- === GUI SETUP ===
+local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+ScreenGui.Name = "FATALITY_CUSTOM"
+ScreenGui.ResetOnSpawn = false
 
+local MainFrame = Instance.new("Frame", ScreenGui)
+MainFrame.Size = UDim2.new(0, 550, 0, 500)
+MainFrame.Position = UDim2.new(0.5, -275, 0.5, -250)
+MainFrame.BackgroundTransparency = 0.15
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+
+-- Заголовок
+local TitleBar = Instance.new("Frame", MainFrame)
+TitleBar.Size = UDim2.new(1, 0, 0, 30)
+TitleBar.BackgroundTransparency = 0.5
+TitleBar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+TitleBar.BorderSizePixel = 0
+
+local TitleLabel = Instance.new("TextLabel", TitleBar)
+TitleLabel.Size = UDim2.new(1, 0, 1, 0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "FATALITY | CUSTOM"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.TextSize = 14
+
+-- Кнопки вкладок
+local TabContainer = Instance.new("Frame", MainFrame)
+TabContainer.Size = UDim2.new(1, 0, 0, 40)
+TabContainer.Position = UDim2.new(0, 0, 0, 30)
+TabContainer.BackgroundTransparency = 1
+TabContainer.BorderSizePixel = 0
+
+local ContentArea = Instance.new("Frame", MainFrame)
+ContentArea.Size = UDim2.new(1, -20, 1, -90)
+ContentArea.Position = UDim2.new(0, 10, 0, 80)
+ContentArea.BackgroundTransparency = 1
+ContentArea.BorderSizePixel = 0
+
+-- Функция создания вкладки
+local function CreateTab(name, xPos)
+    local TabBtn = Instance.new("TextButton", TabContainer)
+    TabBtn.Size = UDim2.new(0, 100, 1, 0)
+    TabBtn.Position = UDim2.new(0, xPos, 0, 0)
+    TabBtn.BackgroundTransparency = 1
+    TabBtn.Text = name
+    TabBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
+    TabBtn.Font = Enum.Font.GothamBold
+    TabBtn.TextSize = 12
+    
+    local TabContent = Instance.new("ScrollingFrame", ContentArea)
+    TabContent.Size = UDim2.new(1, 0, 1, 0)
+    TabContent.BackgroundTransparency = 1
+    TabContent.BorderSizePixel = 0
+    TabContent.Visible = false
+    TabContent.CanvasSize = UDim2.new(0, 0, 0, 1000)
+    TabContent.ScrollBarThickness = 0
+
+    TabBtn.MouseButton1Click:Connect(function()
+        for _, child in ipairs(ContentArea:GetChildren()) do
+            if child:IsA("ScrollingFrame") then child.Visible = false end
+        end
+        for _, btn in ipairs(TabContainer:GetChildren()) do
+            if btn:IsA("TextButton") then btn.TextColor3 = Color3.fromRGB(150, 150, 150) end
+        end
+        TabContent.Visible = true
+        TabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    end)
+    
+    return TabContent
+end
+
+local RageTab = CreateTab("RAGE", 10)
+local LegitTab = CreateTab("LEGIT", 120)
+local VisualTab = CreateTab("VISUAL", 230)
+local MiscTab = CreateTab("MISC", 340)
+local SettingsTab = CreateTab("SETTING", 450)
+
+-- Функция добавления тоггла
+local function AddToggle(parent, name, callback)
+    local ToggleFrame = Instance.new("Frame", parent)
+    ToggleFrame.Size = UDim2.new(1, -20, 0, 30)
+    ToggleFrame.BackgroundTransparency = 0.8
+    ToggleFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    ToggleFrame.BorderSizePixel = 0
+    
+    local Label = Instance.new("TextLabel", ToggleFrame)
+    Label.Size = UDim2.new(1, -40, 1, 0)
+    Label.Position = UDim2.new(0, 10, 0, 0)
+    Label.BackgroundTransparency = 1
+    Label.Text = name
+    Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Label.Font = Enum.Font.Gotham
+    Label.TextSize = 12
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local Box = Instance.new("Frame", ToggleFrame)
+    Box.Size = UDim2.new(0, 20, 0, 20)
+    Box.Position = UDim2.new(1, -30, 0.5, -10)
+    Box.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+    Box.BorderSizePixel = 0
+    
+    local enabled = false
+    ToggleFrame.MouseButton1Click:Connect(function()
+        enabled = not enabled
+        Box.BackgroundColor3 = enabled and Color3.fromRGB(255, 34, 75) or Color3.fromRGB(100, 100, 100)
+        if callback then callback(enabled) end
+    end)
+end
+
+-- ESP Settings
+local ESP_Settings = {Enabled = false, Color = Color3.fromRGB(255, 34, 75), Objects = {}}
+
+AddToggle(RageTab, "Silent Aim", function(v) print("Silent Aim: " .. tostring(v)) end)
+AddToggle(LegitTab, "Aim Assist", function(v) print("Aim Assist: " .. tostring(v)) end)
+AddToggle(VisualTab, "Player ESP", function(v) ESP_Settings.Enabled = v end)
+AddToggle(MiscTab, "Bunnyhop", function(v) print("Bunnyhop: " .. tostring(v)) end)
+
+-- ESP Logic
 local function DrawESP(Player)
-	if not ESP_Settings.Enabled or Player == LocalPlayer or not Player.Character then return end
-	
-	local Head = Player.Character:FindFirstChild("Head")
-	if not Head then return end
+    if not ESP_Settings.Enabled or Player == LocalPlayer or not Player.Character then return end
+    local Head = Player.Character:FindFirstChild("Head")
+    if not Head then return end
+    
+    local Pos, OnScreen = Camera:WorldToViewportPoint(Head.Position)
+    if not OnScreen then return end
 
-	local Pos, OnScreen = Camera:WorldToViewportPoint(Head.Position)
-	if not OnScreen then return end
+    if ESP_Settings.Objects[Player] then
+        for _, obj in pairs(ESP_Settings.Objects[Player]) do pcall(function() obj:Remove() end) end
+    end
+    ESP_Settings.Objects[Player] = {}
 
-	-- очистка старых объектов
-	if ESP_Settings.Objects[Player] then
-		for _, obj in pairs(ESP_Settings.Objects[Player]) do pcall(function() obj:Remove() end) end
-	end
-	ESP_Settings.Objects[Player] = {}
-
-	-- бокс
-	local Box = Drawing.new("Square")
-	Box.Size = Vector2.new(30, 30)
-	Box.Position = Vector2.new(Pos.X - 15, Pos.Y - 15)
-	Box.Color = ESP_Settings.Color
-	Box.Thickness = 2
-	Box.Filled = false
-	table.insert(ESP_Settings.Objects[Player], Box)
-
-	-- имя
-	if ESP_Settings.ShowNames then
-		local Name = Drawing.new("Text")
-		Name.Text = Player.Name
-		Name.Position = Vector2.new(Pos.X - 15, Pos.Y - 35)
-		Name.Color = Color3.fromRGB(255, 255, 255)
-		Name.Size = 14
-		Name.Outline = true
-		table.insert(ESP_Settings.Objects[Player], Name)
-	end
+    local Box = Drawing.new("Square")
+    Box.Size = Vector2.new(30, 30)
+    Box.Position = Vector2.new(Pos.X - 15, Pos.Y - 15)
+    Box.Color = ESP_Settings.Color
+    Box.Thickness = 2
+    Box.Filled = false
+    table.insert(ESP_Settings.Objects[Player], Box)
+    
+    local Name = Drawing.new("Text")
+    Name.Text = Player.Name
+    Name.Position = Vector2.new(Pos.X - 15, Pos.Y - 35)
+    Name.Color = Color3.fromRGB(255, 255, 255)
+    Name.Size = 14
+    Name.Outline = true
+    table.insert(ESP_Settings.Objects[Player], Name)
 end
 
 RunService.RenderStepped:Connect(function()
-	for player, objects in pairs(ESP_Settings.Objects) do
-		if not player.Character or player.Character:FindFirstChild("Humanoid").Health <= 0 then
-			for _, obj in pairs(objects) do pcall(function() obj:Remove() end) end
-			ESP_Settings.Objects[player] = nil
-		else
-			DrawESP(player)
-		end
-	end
+    for player, objects in pairs(ESP_Settings.Objects) do
+        if not player.Character or player.Character:FindFirstChild("Humanoid").Health <= 0 then
+            for _, obj in pairs(objects) do pcall(function() obj:Remove() end) end
+            ESP_Settings.Objects[player] = nil
+        else
+            DrawESP(player)
+        end
+    end
 end)
 
-OrionLib:Init()
+-- Toggle Key G
+local isVisible = true
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.G then
+        isVisible = not isVisible
+        MainFrame.Visible = isVisible
+    end
+end)
