@@ -1,21 +1,27 @@
--- language: Luau, file: bloxstrike_hub_fixed.lua, target: Roblox, Wave/Synapse
--- *BloxStrike Hub Fixed UI: Tabs with CanvasSize auto-update, Transparency, and Keybind (G)*
+-- language: Luau, file: bloxstrike_hub_debug.lua, target: Roblox, Wave/Synapse
+-- *BloxStrike Hub Debug Version (PlayerGui + Print Check)*
 
-local CoreGui = game:GetService("CoreGui")
+print("[BloxStrike Hub] Запуск скрипта...")
+
+local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
+local localPlayer = Players.LocalPlayer
+local playerGui = localPlayer:WaitForChild("PlayerGui")
 
--- Удаляем старый интерфейс, если он уже есть
-if CoreGui:FindFirstChild("BloxStrikeHub") then
-    CoreGui.BloxStrikeHub:Destroy()
+-- Удаляем старый интерфейс, если он есть
+if playerGui:FindFirstChild("BloxStrikeHub") then
+    playerGui.BloxStrikeHub:Destroy()
 end
 
 -- Главный контейнер (ScreenGui)
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "BloxStrikeHub"
-ScreenGui.Parent = CoreGui
+ScreenGui.Parent = playerGui
 ScreenGui.ResetOnSpawn = false
 
--- Основное окно (550x500, с легкой прозрачностью)
+print("[BloxStrike Hub] ScreenGui создан успешно.")
+
+-- Основное окно (550x500)
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Size = UDim2.new(0, 550, 0, 500)
@@ -29,7 +35,7 @@ local MainCorner = Instance.new("UICorner")
 MainCorner.CornerRadius = UDim.new(0, 8)
 MainCorner.Parent = MainFrame
 
--- Шапка окна (для перетаскивания)
+-- Шапка окна
 local TopBar = Instance.new("Frame")
 TopBar.Name = "TopBar"
 TopBar.Size = UDim2.new(1, 0, 0, 40)
@@ -73,7 +79,7 @@ CloseButton.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
 end)
 
--- Сайдбар слева для кнопок вкладок
+-- Сайдбар слева
 local Sidebar = Instance.new("ScrollingFrame")
 Sidebar.Name = "Sidebar"
 Sidebar.Size = UDim2.new(0, 130, 1, -50)
@@ -93,7 +99,7 @@ SidebarLayout.SortOrder = Enum.SortOrder.LayoutIndex
 SidebarLayout.Padding = UDim.new(0, 5)
 SidebarLayout.Parent = Sidebar
 
--- Контейнер для страниц вкладок
+-- Контейнер для страниц
 local Container = Instance.new("Frame")
 Container.Name = "Container"
 Container.Size = UDim2.new(1, -150, 1, -50)
@@ -134,7 +140,6 @@ local function createTab(name)
     PageLayout.Padding = UDim.new(0, 8)
     PageLayout.Parent = TabPage
     
-    -- Автоматическое обновление размера холста (CanvasSize), чтобы контент в вкладках не пропадал
     PageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         TabPage.CanvasSize = UDim2.new(0, 0, 0, PageLayout.AbsoluteContentSize.Y + 10)
     end)
@@ -157,27 +162,12 @@ local function createTab(name)
     return TabPage
 end
 
--- Создаем вкладки
-local AimbotTab = createTab("Aimbot")
-local VisualTab = createTab("Visual")
-local MiscTab = createTab("Misc")
-local SettingTab = createTab("Setting")
+createTab("Aimbot")
+createTab("Visual")
+createTab("Misc")
+createTab("Setting")
 
--- Тестовая кнопка во вкладке Visual, чтобы проверить работоспособность вкладок
-local TestLabel = Instance.new("TextLabel")
-TestLabel.Size = UDim2.new(1, -10, 0, 35)
-TestLabel.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-TestLabel.Font = Enum.Font.Gotham
-TestLabel.Text = "Вкладки работают!"
-TestLabel.TextColor3 = Color3.fromRGB(0, 255, 128)
-TestLabel.TextSize = 14
-TestLabel.Parent = VisualTab
-
-local TestCorner = Instance.new("UICorner")
-TestCorner.CornerRadius = UDim.new(0, 6)
-TestCorner.Parent = TestLabel
-
--- Перетаскивание окна за шапку
+-- Перетаскивание
 local dragging, dragInput, dragStart, startPos
 
 TopBar.InputBegan:Connect(function(input)
@@ -207,9 +197,11 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- Скрытие / открытие по клавише G (с проверкой на ввод в чате)
+-- Переключение по G
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if not gameProcessed and input.KeyCode == Enum.KeyCode.G then
         MainFrame.Visible = not MainFrame.Visible
     end
 end)
+
+print("[BloxStrike Hub] Интерфейс успешно инициализирован!")
