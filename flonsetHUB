@@ -154,79 +154,91 @@ if pages["Target"] then
         firstBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     end
 end
--- language: Luau, file: mm2_visual_toggle.lua, target: Roblox, Synapse/Wave
--- *Toggleable Chams and ESP module*
+-- language: Luau, file: mm2_visual_fixed.lua, target: Roblox, Wave/Synapse
+-- *Fixed Visuals module with proper toggle state handling*
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local localPlayer = Players.LocalPlayer
 
--- Состояние настроек
-getgenv().MM2Settings = {
+getgenv().MM2Settings = MM2Settings or {
     ChamsEnabled = false,
     BoxesEnabled = false,
 }
 
-local function updateVisuals()
+local function clearVisuals(character)
+    local highlight = character:FindFirstChild("PlayerHighlight")
+    if highlight then highlight:Destroy() end
+    
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    if rootPart then
+        local billboard = rootPart:FindFirstChild("ESPBox")
+        if billboard then billboard:Destroy() end
+    end
+end
+
+RunService.RenderStepped:Connect(function()
     for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= localPlayer and player.Character then
-            local char = player.Character
-            
-            -- Чамсы (Highlight)
-            local highlight = char:FindFirstChild("PlayerHighlight")
-            if MM2Settings.ChamsEnabled then
-                if not highlight then
-                    highlight = Instance.new("Highlight")
-                    highlight.Name = "PlayerHighlight"
-                    highlight.FillColor = Color3.fromRGB(0, 170, 255)
-                    highlight.FillTransparency = 0.5
-                    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-                    highlight.OutlineTransparency = 0
-                    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-                    highlight.Adornee = char
-                    highlight.Parent = char
-                end
-            else
-                if highlight then
-                    highlight:Destroy()
-                end
-            end
-            
-            -- Боксы (BillboardGui / Drawing)
-            local rootPart = char:FindFirstChild("HumanoidRootPart")
-            if rootPart then
-                local billboard = rootPart:FindFirstChild("ESPBox")
-                if MM2Settings.BoxesEnabled then
-                    if not billboard then
-                        billboard = Instance.new("BillboardGui")
-                        billboard.Name = "ESPBox"
-                        billboard.Size = UDim2.new(4, 0, 5, 0)
-                        billboard.AlwaysOnTop = true
-                        billboard.Adornee = rootPart
-                        
-                        local frame = Instance.new("Frame")
-                        frame.Size = UDim2.new(1, 0, 1, 0)
-                        frame.BackgroundTransparency = 1
-                        frame.BorderSizePixel = 0
-                        
-                        -- Простенькая обводка рамки
-                        local uiStroke = Instance.new("UIStroke")
-                        uiStroke.Color = Color3.fromRGB(0, 255, 128)
-                        uiStroke.Thickness = 1.5
-                        uiStroke.Parent = frame
-                        
-                        frame.Parent = billboard
-                        billboard.Parent = rootPart
+        if player ~= localPlayer then
+            local character = player.Character
+            if character and character:FindFirstChild("Humanoid") and character.Humanoid.Health > 0 then
+                
+                -- Управление чамсами
+                local highlight = character:FindFirstChild("PlayerHighlight")
+                if MM2Settings.ChamsEnabled then
+                    if not highlight then
+                        highlight = Instance.new("Highlight")
+                        highlight.Name = "PlayerHighlight"
+                        highlight.FillColor = Color3.fromRGB(0, 170, 255)
+                        highlight.FillTransparency = 0.5
+                        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                        highlight.OutlineTransparency = 0
+                        highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                        highlight.Adornee = character
+                        highlight.Parent = character
                     end
                 else
-                    if billboard then
-                        billboard:Destroy()
+                    if highlight then
+                        highlight:Destroy()
                     end
+                end
+                
+                -- Управление боксами
+                local rootPart = character:FindFirstChild("HumanoidRootPart")
+                if rootPart then
+                    local billboard = rootPart:FindFirstChild("ESPBox")
+                    if MM2Settings.BoxesEnabled then
+                        if not billboard then
+                            billboard = Instance.new("BillboardGui")
+                            billboard.Name = "ESPBox"
+                            billboard.Size = UDim2.new(4, 0, 5, 0)
+                            billboard.AlwaysOnTop = true
+                            billboard.Adornee = rootPart
+                            
+                            local frame = Instance.new("Frame")
+                            frame.Size = UDim2.new(1, 0, 1, 0)
+                            frame.BackgroundTransparency = 1
+                            
+                            local uiStroke = Instance.new("UIStroke")
+                            uiStroke.Color = Color3.fromRGB(0, 255, 128)
+                            uiStroke.Thickness = 1.5
+                            uiStroke.Parent = frame
+                            
+                            frame.Parent = billboard
+                            billboard.Parent = rootPart
+                        end
+                    else
+                        if billboard then
+                            billboard:Destroy()
+                        end
+                    end
+                end
+                
+            else
+                if character then
+                    clearVisuals(character)
                 end
             end
         end
     end
-end
-
-RunService.RenderStepped:Connect(updateVisu
-als)
+end)
