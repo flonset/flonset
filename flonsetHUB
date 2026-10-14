@@ -1,9 +1,8 @@
--- language: Luau, file: bloxstrike_hub_tabs.lua, target: Roblox, Wave/Synapse
--- *BloxStrike Hub Complete UI with Tabs, Transparency, and Keybind (G)*
+-- language: Luau, file: bloxstrike_hub_fixed.lua, target: Roblox, Wave/Synapse
+-- *BloxStrike Hub Fixed UI: Tabs with CanvasSize auto-update, Transparency, and Keybind (G)*
 
 local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
 
 -- Удаляем старый интерфейс, если он уже есть
 if CoreGui:FindFirstChild("BloxStrikeHub") then
@@ -22,7 +21,7 @@ MainFrame.Name = "MainFrame"
 MainFrame.Size = UDim2.new(0, 550, 0, 500)
 MainFrame.Position = UDim2.new(0.5, -275, 0.5, -250)
 MainFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
-MainFrame.BackgroundTransparency = 0.15 -- Чуть-чуть прозрачное
+MainFrame.BackgroundTransparency = 0.15
 MainFrame.BorderSizePixel = 0
 MainFrame.Parent = ScreenGui
 
@@ -74,7 +73,7 @@ CloseButton.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
 end)
 
--- Сайдбар с вкладками слева
+-- Сайдбар слева для кнопок вкладок
 local Sidebar = Instance.new("ScrollingFrame")
 Sidebar.Name = "Sidebar"
 Sidebar.Size = UDim2.new(0, 130, 1, -50)
@@ -94,7 +93,7 @@ SidebarLayout.SortOrder = Enum.SortOrder.LayoutIndex
 SidebarLayout.Padding = UDim.new(0, 5)
 SidebarLayout.Parent = Sidebar
 
--- Контейнер для страниц (содержимое вкладок)
+-- Контейнер для страниц вкладок
 local Container = Instance.new("Frame")
 Container.Name = "Container"
 Container.Size = UDim2.new(1, -150, 1, -50)
@@ -102,16 +101,13 @@ Container.Position = UDim2.new(0, 146, 0, 46)
 Container.BackgroundTransparency = 1
 Container.Parent = MainFrame
 
--- Система вкладок
 local tabs = {}
 local pages = {}
 local firstTab = true
 
 local function createTab(name)
-    -- Кнопка в сайдбаре
     local TabButton = Instance.new("TextButton")
     TabButton.Size = UDim2.new(1, -10, 0, 35)
-    TabButton.Position = UDim2.new(0, 5, 0, 0)
     TabButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
     TabButton.BackgroundTransparency = firstTab and 0.2 or 0.6
     TabButton.Font = Enum.Font.GothamSemibold
@@ -124,7 +120,6 @@ local function createTab(name)
     BtnCorner.CornerRadius = UDim.new(0, 6)
     BtnCorner.Parent = TabButton
     
-    -- Страница вкладки
     local TabPage = Instance.new("ScrollingFrame")
     TabPage.Name = name .. "Page"
     TabPage.Size = UDim2.new(1, 0, 1, 0)
@@ -138,6 +133,11 @@ local function createTab(name)
     PageLayout.SortOrder = Enum.SortOrder.LayoutIndex
     PageLayout.Padding = UDim.new(0, 8)
     PageLayout.Parent = TabPage
+    
+    -- Автоматическое обновление размера холста (CanvasSize), чтобы контент в вкладках не пропадал
+    PageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        TabPage.CanvasSize = UDim2.new(0, 0, 0, PageLayout.AbsoluteContentSize.Y + 10)
+    end)
     
     TabButton.MouseButton1Click:Connect(function()
         for _, page in pairs(pages) do
@@ -157,11 +157,25 @@ local function createTab(name)
     return TabPage
 end
 
--- Создаем основные вкладки
+-- Создаем вкладки
 local AimbotTab = createTab("Aimbot")
 local VisualTab = createTab("Visual")
 local MiscTab = createTab("Misc")
 local SettingTab = createTab("Setting")
+
+-- Тестовая кнопка во вкладке Visual, чтобы проверить работоспособность вкладок
+local TestLabel = Instance.new("TextLabel")
+TestLabel.Size = UDim2.new(1, -10, 0, 35)
+TestLabel.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+TestLabel.Font = Enum.Font.Gotham
+TestLabel.Text = "Вкладки работают!"
+TestLabel.TextColor3 = Color3.fromRGB(0, 255, 128)
+TestLabel.TextSize = 14
+TestLabel.Parent = VisualTab
+
+local TestCorner = Instance.new("UICorner")
+TestCorner.CornerRadius = UDim.new(0, 6)
+TestCorner.Parent = TestLabel
 
 -- Перетаскивание окна за шапку
 local dragging, dragInput, dragStart, startPos
@@ -193,7 +207,7 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- Скрытие / открытие по клавише G
+-- Скрытие / открытие по клавише G (с проверкой на ввод в чате)
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if not gameProcessed and input.KeyCode == Enum.KeyCode.G then
         MainFrame.Visible = not MainFrame.Visible
