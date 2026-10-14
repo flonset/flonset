@@ -1,73 +1,191 @@
-local Fatality = loadstring(game:HttpGet("https://raw.githubusercontent.com/4lpaca-pin/Fatality/refs/heads/main/src/source.luau"))();
-local Notification = Fatality:CreateNotifier();
+local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
 
-Fatality:Loader({
-    Name = "FATALITY",
-    Duration = 4
-});
+local Window = OrionLib:MakeWindow({Name = "FATALITY | REBORN", HidePremium = false, SaveConfig = true, ConfigFolder = "FatalityReborn"})
 
-Notification:Notify({
-    Title = "FATALITY",
-    Content = "Hello, "..game.Players.LocalPlayer.DisplayName..' Welcome back!',
-    Icon = "clipboard"
+-- === ВКЛАДКИ ===
+local RageTab = Window:MakeTab({
+	Name = "RAGE",
+	Icon = "rbxassetid://4483345998",
+	PremiumOnly = false
 })
 
-local Window = Fatality.new({
-    Name = "FATALITY",
-    Expire = "never",
-});
+local LegitTab = Window:MakeTab({
+	Name = "LEGIT",
+	Icon = "rbxassetid://4483345148",
+	PremiumOnly = false
+})
 
-local Rage = Window:AddMenu({Name = "RAGE", Icon = "skull"})
-local Legit = Window:AddMenu({Name = "LEGIT", Icon = "target"})
-local Visual = Window:AddMenu({Name = "VISUAL", Icon = "eye"})
-local Misc = Window:AddMenu({Name = "MISC", Icon = "settings"})
+local VisualTab = Window:MakeTab({
+	Name = "VISUAL",
+	Icon = "rbxassetid://4483344428",
+	PremiumOnly = false
+})
 
--- === RAGE SECTION (оставил как было) ===
-do
-    local Weapon = Rage:AddSection({Position = 'left', Name = "WEAPON"});
-    local General = Rage:AddSection({Position = 'right', Name = "GENERAL"});
-    
-    Weapon:AddSlider({Name = "Hit-chance", Default = 61})
-    Weapon:AddSlider({Name = "Min-damage", Type = "%", Default = 85})
-    Weapon:AddDropdown({Name = "Hitboxes", Values = {"Head",'Neck','Arms','Legs'}})
-    
-    General:AddToggle({Name = "Aimbot", Risky = true})
-    General:AddToggle({Name = "Silent aim", Risky = false})
-    General:AddSlider({Name = "Maximum fov", Type = " deg", Default = 0})
-end
+local MiscTab = Window:MakeTab({
+	Name = "MISC",
+	Icon = "rbxassetid://4483344000",
+	PremiumOnly = false
+})
 
--- === LEGIT SECTION (оставил как было) ===
-do
-    local Aim = Legit:AddSection({Position = 'left', Name = "AIM"});
-    local Trigger = Legit:AddSection({Position = 'center', Name = "TRIGGER"});
-    
-    Aim:AddToggle({Name = "Aim assist"})
-    Aim:AddSlider({Name = "Aim fov", Round = 1, Default = 0.1, Type = " deg"})
-    
-    Trigger:AddToggle({Name = "Triggerbot"})
-    Trigger:AddSlider({Name = "Reaction time", Default = 0, Type = "ms"})
-end
+-- === RAGE SECTION ===
+RageTab:AddSection("WEAPON")
+RageTab:AddSlider({
+	Name = "Hit-chance",
+	Min = 0,
+	Max = 100,
+	Default = 61,
+	Color = Color3.fromRGB(255,255,255),
+	Increment = 1,
+	Callback = function(Value)
+		print("Hit-chance set to: " .. Value)
+	end	
+})
+RageTab:AddSlider({
+	Name = "Min-damage",
+	Min = 0,
+	Max = 100,
+	Default = 85,
+	Color = Color3.fromRGB(255,255,255),
+	Increment = 1,
+	Callback = function(Value)
+		print("Min-damage set to: " .. Value)
+	end	
+})
+RageTab:AddDropdown({
+	Name = "Hitboxes",
+	CurrentOption = {"Head"},
+	MultipleOptions = true,
+	Options = {"Head", "Neck", "Arms", "Legs"}
+})
 
--- === VISUAL SECTION (ДОБАВЛЕН ESP) ===
-do
-    local Esp = Visual:AddSection({Position = 'left', Name = "ESP"});
-    local World = Visual:AddSection({Position = 'right', Name = "WORLD"});
+RageTab:AddSection("GENERAL")
+RageTab:AddToggle({
+	Name = "Aimbot",
+	Default = false,
+	Callback = function(Value)
+		print("Aimbot toggled: " .. tostring(Value))
+	end	
+})
+RageTab:AddToggle({
+	Name = "Silent Aim",
+	Default = false,
+	Callback = function(Value)
+		print("Silent Aim toggled: " .. tostring(Value))
+	end	
+})
+RageTab:AddSlider({
+	Name = "Maximum FOV",
+	Min = 0,
+	Max = 360,
+	Default = 180,
+	Color = Color3.fromRGB(255,255,255),
+	Increment = 1,
+	Callback = function(Value)
+		print("FOV set to: " .. Value)
+	end	
+})
+RageTab:AddToggle({
+	Name = "Autofire",
+	Default = false,
+	Callback = function(Value)
+		print("Autofire toggled: " .. tostring(Value))
+	end	
+})
 
-    -- настройки esp
-    local PlayerEsp = Esp:AddToggle({Name = "Player ESP", Option = false})
-    PlayerEsp.Option:AddColorPicker({Name = "Box Color", Default = Color3.fromRGB(255, 34, 75)})
-    
-    Esp:AddToggle({Name = "Show Names", Option = true})
-    Esp:AddToggle({Name = "Show Health", Option = true})
-    
-    World:AddToggle({Name = "Thirdperson", Option = false}).Option:AddSlider({Name = "Distance", Default = 10})
-end
+-- === LEGIT SECTION ===
+LegitTab:AddSection("AIM ASSIST")
+LegitTab:AddToggle({
+	Name = "Enabled",
+	Default = false,
+	Callback = function(Value)
+		print("Aim Assist enabled: " .. tostring(Value))
+	end	
+})
+LegitTab:AddSlider({
+	Name = "FOV",
+	Min = 0,
+	Max = 360,
+	Default = 5,
+	Color = Color3.fromRGB(255,255,255),
+	Increment = 1,
+	Callback = function(Value)
+		print("Aim FOV set to: " .. Value)
+	end	
+})
+LegitTab:AddSlider({
+	Name = "Smoothness",
+	Min = 1,
+	Max = 20,
+	Default = 5,
+	Color = Color3.fromRGB(255,255,255),
+	Increment = 1,
+	Callback = function(Value)
+		print("Smoothness set to: " .. Value)
+	end	
+})
+
+LegitTab:AddSection("RECOIL CONTROL")
+LegitTab:AddToggle({
+	Name = "RCS Enabled",
+	Default = true,
+	Callback = function(Value)
+		print("RCS enabled: " .. tostring(Value))
+	end	
+})
+
+-- === VISUAL SECTION (С ESP) ===
+VisualTab:AddSection("ESP")
+VisualTab:AddToggle({
+	Name = "Player ESP",
+	Default = false,
+	Callback = function(Value)
+		ESP_Settings.Enabled = Value
+	end	
+})
+VisualTab:AddColorPicker({
+	Name = "ESP Color",
+	Default = Color3.fromRGB(255, 34, 75),
+	Callback = function(Value)
+		ESP_Settings.Color = Value
+	end
+})
+VisualTab:AddToggle({
+	Name = "Show Names",
+	Default = true,
+	Callback = function(Value)
+		ESP_Settings.ShowNames = Value
+	end	
+})
+
+VisualTab:AddSection("WORLD")
+VisualTab:AddToggle({
+	Name = "Thirdperson",
+	Default = false,
+	Callback = function(Value)
+		if Value then
+			workspace.CurrentCamera.CameraSubject = workspace.CurrentCamera
+		else
+			workspace.CurrentCamera.CameraSubject = game.Players.LocalPlayer.Character.Humanoid
+		end
+	end	
+})
 
 -- === MISC SECTION ===
-do
-    local Extra = Misc:AddSection({Position = 'left', Name = "EXTRA"});
-    Extra:AddToggle({Name = "Bunnyhop", Option = false})
-end
+MiscTab:AddSection("EXTRA")
+MiscTab:AddToggle({
+	Name = "Bunnyhop",
+	Default = false,
+	Callback = function(Value)
+		print("Bunnyhop: " .. tostring(Value))
+	end	
+})
+MiscTab:AddKeybind({
+	Name = "Menu Toggle",
+	Key = Enum.KeyCode.G,
+	Callback = function()
+		print("Menu key pressed")
+	end	
+})
 
 -- === ESP LOGIC CORE ===
 local Players = game:GetService("Players")
@@ -75,76 +193,58 @@ local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local RunService = game:GetService("RunService")
 
-local ESP_Settings = {
-    Enabled = false,
-    ShowNames = true,
-    ShowHealth = true,
-    Color = Color3.fromRGB(255, 34, 75),
-    Objects = {}
+ESP_Settings = {
+	Enabled = false,
+	ShowNames = true,
+	Color = Color3.fromRGB(255, 34, 75),
+	Objects = {}
 }
 
--- функция отрисовки
 local function DrawESP(Player)
-    if not ESP_Settings.Enabled or Player == LocalPlayer or not Player.Character then return end
-    
-    local Head = Player.Character:FindFirstChild("Head")
-    if not Head then return end
+	if not ESP_Settings.Enabled or Player == LocalPlayer or not Player.Character then return end
+	
+	local Head = Player.Character:FindFirstChild("Head")
+	if not Head then return end
 
-    local Pos, OnScreen = Camera:WorldToViewportPoint(Head.Position)
-    if not OnScreen then return end
+	local Pos, OnScreen = Camera:WorldToViewportPoint(Head.Position)
+	if not OnScreen then return end
 
-    -- удаляем старые объекты этого игрока
-    if ESP_Settings.Objects[Player] then
-        for _, obj in pairs(ESP_Settings.Objects[Player]) do pcall(function() obj:Remove() end) end
-    end
-    ESP_Settings.Objects[Player] = {}
+	-- очистка старых объектов
+	if ESP_Settings.Objects[Player] then
+		for _, obj in pairs(ESP_Settings.Objects[Player]) do pcall(function() obj:Remove() end) end
+	end
+	ESP_Settings.Objects[Player] = {}
 
-    -- рисуем бокс
-    local Box = Drawing.new("Square")
-    Box.Size = Vector2.new(30, 30)
-    Box.Position = Vector2.new(Pos.X - 15, Pos.Y - 15)
-    Box.Color = ESP_Settings.Color
-    Box.Thickness = 2
-    Box.Filled = false
-    table.insert(ESP_Settings.Objects[Player], Box)
+	-- бокс
+	local Box = Drawing.new("Square")
+	Box.Size = Vector2.new(30, 30)
+	Box.Position = Vector2.new(Pos.X - 15, Pos.Y - 15)
+	Box.Color = ESP_Settings.Color
+	Box.Thickness = 2
+	Box.Filled = false
+	table.insert(ESP_Settings.Objects[Player], Box)
 
-    -- рисуем имя
-    if ESP_Settings.ShowNames then
-        local Name = Drawing.new("Text")
-        Name.Text = Player.Name
-        Name.Position = Vector2.new(Pos.X - 15, Pos.Y - 35)
-        Name.Color = Color3.fromRGB(255, 255, 255)
-        Name.Size = 14
-        Name.Outline = true
-        table.insert(ESP_Settings.Objects[Player], Name)
-    end
-
-    -- рисуем здоровье
-    if ESP_Settings.ShowHealth and Player.Character:FindFirstChild("Humanoid") then
-        local Health = Player.Character.Humanoid.Health
-        local Text = Drawing.new("Text")
-        Text.Text = math.floor(Health) .. " HP"
-        Text.Position = Vector2.new(Pos.X - 15, Pos.Y + 20)
-        Text.Color = Health > 50 and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
-        Text.Size = 12
-        Text.Outline = true
-        table.insert(ESP_Settings.Objects[Player], Text)
-    end
+	-- имя
+	if ESP_Settings.ShowNames then
+		local Name = Drawing.new("Text")
+		Name.Text = Player.Name
+		Name.Position = Vector2.new(Pos.X - 15, Pos.Y - 35)
+		Name.Color = Color3.fromRGB(255, 255, 255)
+		Name.Size = 14
+		Name.Outline = true
+		table.insert(ESP_Settings.Objects[Player], Name)
+	end
 end
 
--- главный цикл рендера
 RunService.RenderStepped:Connect(function()
-    -- очистка объектов мертвых игроков
-    for player, objects in pairs(ESP_Settings.Objects) do
-        if not player.Character or player.Character:FindFirstChild("Humanoid").Health <= 0 then
-            for _, obj in pairs(objects) do pcall(function() obj:Remove() end) end
-            ESP_Settings.Objects[player] = nil
-        else
-            DrawESP(player)
-        end
-    end
+	for player, objects in pairs(ESP_Settings.Objects) do
+		if not player.Character or player.Character:FindFirstChild("Humanoid").Health <= 0 then
+			for _, obj in pairs(objects) do pcall(function() obj:Remove() end) end
+			ESP_Settings.Objects[player] = nil
+		else
+			DrawESP(player)
+		end
+	end
 end)
 
--- привязка кнопок гуи к настройкам
--- (в реальном fatality это делается через .Changed или Callback, но для простоты оставим так)
--- чтобы кнопки работали, нужно добавить Callback в AddToggle выше
+OrionLib:Init()
