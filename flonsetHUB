@@ -1,17 +1,51 @@
--- language: Luau, file: bloxstrike_hub.lua, target: Roblox, Project Real / Wave
-local CoreGui = game:GetService("CoreGui")
-local UserInputService = game:GetService("UserInputService")
+-- language: Luau, file: bloxstrike_full_hub.lua, target: Roblox, Project Real / Wave
+-- *BloxStrike Full Script Hub (UI, ESP, Aimbot, BHop, Keybinds)*
 
-if CoreGui:FindFirstChild("BloxStrikeHub") then
-    CoreGui.BloxStrikeHub:Destroy()
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
+
+local localPlayer = Players.LocalPlayer
+local Camera = Workspace.CurrentCamera
+
+-- =================================================================
+-- 1. ГЛОБАЛЬНЫЕ НАСТРОЙКИ (STATE MANAGEMENT)
+-- =================================================================
+getgenv().BS_Settings = getgenv().BS_Settings or {
+    -- Visuals
+    Chams = false,
+    Boxes = false,
+    HP = false,
+    Nickname = false,
+    ChamsColor = Color3.fromRGB(0, 170, 255),
+    BoxesColor = Color3.fromRGB(0, 255, 128),
+    NickColor = Color3.fromRGB(255, 255, 255),
+    
+    -- Aimbot
+    AimbotEnabled = false,
+    AimFov = 150,
+    
+    -- Misc
+    BHopEnabled = false
+}
+
+-- Удаление старого UI
+if CoreGui:FindFirstChild("BloxStrikeFullHub") then
+    CoreGui.BloxStrikeFullHub:Destroy()
 end
 
+-- =================================================================
+-- 2. СОЗДАНИЕ ИНТЕРФЕЙСА (UI FRAMEWORK 550x500)
+-- =================================================================
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "BloxStrikeHub"
+ScreenGui.Name = "BloxStrikeFullHub"
 ScreenGui.Parent = CoreGui
 ScreenGui.ResetOnSpawn = false
 
 local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
 MainFrame.Size = UDim2.new(0, 550, 0, 500)
 MainFrame.Position = UDim2.new(0.5, -275, 0.5, -250)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
@@ -23,6 +57,7 @@ local MainCorner = Instance.new("UICorner")
 MainCorner.CornerRadius = UDim.new(0, 10)
 MainCorner.Parent = MainFrame
 
+-- Шапка
 local TopBar = Instance.new("Frame")
 TopBar.Size = UDim2.new(1, 0, 0, 40)
 TopBar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
@@ -44,6 +79,7 @@ Title.TextSize = 15
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Parent = TopBar
 
+-- Крестик закрытия
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Size = UDim2.new(0, 28, 0, 28)
 CloseBtn.Position = UDim2.new(1, -34, 0.5, -14)
@@ -62,6 +98,7 @@ CloseBtn.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
 end)
 
+-- Сайдбар вкладок
 local Sidebar = Instance.new("ScrollingFrame")
 Sidebar.Size = UDim2.new(0, 130, 1, -50)
 Sidebar.Position = UDim2.new(0, 10, 0, 45)
@@ -129,146 +166,32 @@ local function createTab(name)
     return Page
 end
 
-createTab("Aimbot")
-createTab("Visual")
-createTab("Misc")
-createTab("Setting")
+local AimbotTab = createTab("Aimbot")
+local VisualTab = createTab("Visual")
+local MiscTab = createTab("Misc")
+local SettingTab = createTab("Setting")
 
--- Перетаскивание
-local dragging, dragInput, dragStart, startPos
-TopBar.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = MainFrame.Position
-    end
-end)
-UserInputService.InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-        local delta = input.Position - dragStart
-        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-end)
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = false
-    end
-end)
-
--- Скрытие по G
-UserInputService.InputBegan:Connect(function(input, gp)
-    if not gp and input.KeyCode == Enum.KeyCode.G then
-        MainFrame.Visible = not MainFrame.Visible
-    end
-end)
-
--- language: Luau, file: gui_focus_lock.lua, target: Roblox, Wave/Synapse
--- *Блокировка кликов и нажатий в игре при открытом GUI*
-
-local ContextActionService = järg or game:GetService("ContextActionService") -- защищенная переменная сервиса
-local CAS = game:GetService("ContextActionService")
-local GuiService = game:GetService("GuiService")
-
--- Имя группы для блокировки
-local ACTION_LOCK_NAME = "HubInputBlocker"
-
-local function updateInputLock(isOpen)
-    if isOpen then
-        -- Включаем стандартный курсор Roblox и блокируем игровые действия
-        GuiService.AutoSelectGuiEnabled = true
-        
-        -- Перехватываем основные типы ввода, чтобы они не уходили в игру
-        CAS:BindActionAtPriority(
-            ACTION_LOCK_NAME,
-            function(actionName, inputState, inputObject)
-                return Enum.ContextActionResult.Sink -- "Топит" событие, игра его не получает
-            end,
-            false,
-            Enum.ContextActionPriority.High.Value,
-            Enum.UserInputType.MouseButton1,
-            Enum.UserInputType.MouseButton2,
-            Enum.UserInputType.Keyboard
-        )
-    else
-        -- Возвращаем управление игре
-        pcall(function()
-            CAS:UnbindAction(ACTION_LOCK_NAME)
-        end)
-    end
-end
-
--- Пример интеграции с твоей переменной видимости окна (MainFrame):
--- Вызывай updateInputLock(MainFrame.Visible) при открытии/закрытии или по нажат
-ию G
-
--- language: Luau, file: bloxstrike_esp_section.lua, target: Roblox, Project Real / Wave
--- *Smoothly expandable ESP section with Chams, Box, HP, Nickname and color customization*
-
-local TweenService = game:GetService("TweenService")
-
--- Предполагается, что VisualTab у тебя уже создан из предыдущего кода
--- Создаем главную кнопку-спойлер для ESP
-local EspDropdown = Instance.new("TextButton")
-EspDropdown.Size = UDim2.new(1, -10, 0, 40)
-EspDropdown.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-EspDropdown.Font = Enum.Font.GothamBold
-EspDropdown.Text = "  ▼  ESP Settings"
-EspDropdown.TextColor3 = Color3.fromRGB(255, 255, 255)
-EspDropdown.TextSize = 13
-EspDropdown.TextXAlignment = Enum.TextXAlignment.Left
-EspDropdown.Parent = VisualTab
-
-local DropCorner = Instance.new("UICorner")
-DropCorner.CornerRadius = UDim.new(0, 6)
-DropCorner.Parent = EspDropdown
-
--- Контейнер для элементов ESP (который будет плавно раскрываться)
-local EspContainer = Instance.new("Frame")
-EspContainer.Size = UDim2.new(1, -10, 0, 0) -- Начинаем с высоты 0 (закрыто)
-EspContainer.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
-EspContainer.BackgroundTransparency = 0.5
-EspContainer.BorderSizePixel = 0
-EspContainer.ClipsDescendants = true -- Обрезает всё, что выходит за рамки при сворачивании
-EspContainer.Parent = VisualTab
-
-local ContainerCorner = Instance.new("UICorner")
-ContainerCorner.CornerRadius = UDim.new(0, 6)
-ContainerCorner.Parent = EspContainer
-
-local EspLayout = Instance.new("UIListLayout")
-EspLayout.SortOrder = Enum.SortOrder.LayoutIndex
-EspLayout.Padding = UDim.new(0, 6)
-EspLayout.Parent = EspContainer
-
--- Функция для добавления элементов управления внутрь ESP секции
-local function createToggleWithColor(name, defaultColor, callback)
-    local ItemFrame = Instance.new("Frame")
-    ItemFrame.Size = UDim2.new(1, 0, 0, 32)
-    ItemFrame.BackgroundTransparency = 1
-    ItemFrame.Parent = EspContainer
+-- Функция создания переключателя (Toggle)
+local function createToggle(parentTab, name, callback)
+    local Row = Instance.new("Frame")
+    Row.Size = UDim2.new(1, -5, 0, 36)
+    Row.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    Row.BorderSizePixel = 0
+    Row.Parent = parentTab
+    
+    local RowCorner = Instance.new("UICorner")
+    RowCorner.CornerRadius = UDim.new(0, 6)
+    RowCorner.Parent = Row
     
     local ToggleBtn = Instance.new("TextButton")
-    ToggleBtn.Size = UDim2.new(0.7, 0, 1, 0)
-    ToggleBtn.Position = UDim2.new(0, 5, 0, 0)
+    ToggleBtn.Size = UDim2.new(1, 0, 1, 0)
     ToggleBtn.BackgroundTransparency = 1
     ToggleBtn.Font = Enum.Font.GothamSemibold
     ToggleBtn.Text = "  [ ] " .. name
     ToggleBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
-    ToggleBtn.TextSize = 12
+    ToggleBtn.TextSize = 13
     ToggleBtn.TextXAlignment = Enum.TextXAlignment.Left
-    ToggleBtn.Parent = ItemFrame
-    
-    -- Простейший выбор цвета (цветной квадратик справа)
-    local ColorBtn = Instance.new("TextButton")
-    ColorBtn.Size = UDim2.new(0, 24, 0, 20)
-    ColorBtn.Position = UDim2.new(1, -34, 0.5, -10)
-    ColorBtn.BackgroundColor3 = defaultColor
-    ColorBtn.Text = ""
-    ColorBtn.Parent = ItemFrame
-    
-    local ColorCorner = Instance.new("UICorner")
-    ColorCorner.CornerRadius = UDim.new(0, 4)
-    ColorCorner.Parent = ColorBtn
+    ToggleBtn.Parent = Row
     
     local enabled = false
     ToggleBtn.MouseButton1Click:Connect(function()
@@ -280,41 +203,192 @@ local function createToggleWithColor(name, defaultColor, callback)
             ToggleBtn.Text = "  [ ] " .. name
             ToggleBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
         end
-        callback(enabled, ColorBtn.BackgroundColor3)
+        callback(enabled)
     end)
 end
 
--- Создаем функции и элементы внутри ESP меню
-createToggleWithColor("Chams", Color3.fromRGB(0, 170, 255), function(state, col)
-    print("Chams:", state, col)
-end)
+-- =================================================================
+-- 3. НАПОЛНЕНИЕ ВКЛАДОК КНОПКАМИ
+-- =================================================================
 
-createToggleWithColor("Boxes", Color3.fromRGB(0, 255, 128), function(state, col)
-    print("Boxes:", state, col)
-end)
+-- Вкладка VISUAL
+createToggle(VisualTab, "Chams", function(v) BS_Settings.Chams = v end)
+createToggle(VisualTab, "Box ESP", function(v) BS_Settings.Boxes = v end)
+createToggle(VisualTab, "HP Bar", function(v) BS_Settings.HP = v end)
+createToggle(VisualTab, "Nickname", function(v) BS_Settings.Nickname = v end)
 
-createToggleWithColor("Health Bar (HP)", Color3.fromRGB(50, 255, 50), function(state, col)
-    print("HP:", state, col)
-end)
+-- Вкладка AIMBOT
+createToggle(AimbotTab, "Enable Aimbot (Hold RMB)", function(v) BS_Settings.AimbotEnabled = v end)
 
-createToggleWithColor("Nicknames", Color3.fromRGB(255, 255, 255), function(state, col)
-    print("Nickname:", state, col)
-end)
+-- Вкладка MISC
+createToggle(MiscTab, "Auto BHop (Hold Space)", function(v) BS_Settings.BHopEnabled = v end)
 
--- Логика плавного раскрытия (анимация через TweenService)
-local isOpen = false
-EspDropdown.MouseButton1Click:Connect(function()
-    isOpen = not isOpen
-    
-    -- Считаем реальную высоту в зависимости от количества элементов (4 элемента по ~32 пикселя + отступы)
-    local targetHeight = isOpen and 150 or 0
-    local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-    
-    TweenService:Create(EspContainer, tweenInfo, {Size = UDim2.new(1, -10, 0, targetHeight)}):Play()
-    
-    if isOpen then
-        EspDropdown.Text = "  ▲  ESP Settings"
-    else
-        EspDropdown.Text = "  ▼  ESP Settings"
+-- =================================================================
+-- 4. ЛОГИКА ЧИТА (VISUALS, AIMBOT, BHOP)
+-- =================================================================
+
+-- 1. Визуалы (ESP)
+RunService.RenderStepped:Connect(function()
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= localPlayer then
+            local character = player.Character
+            if character and character:FindFirstChild("Humanoid") and character.Humanoid.Health > 0 then
+                
+                -- Chams
+                local highlight = character:FindFirstChild("BS_Chams")
+                if BS_Settings.Chams then
+                    if not highlight then
+                        highlight = Instance.new("Highlight")
+                        highlight.Name = "BS_Chams"
+                        highlight.FillTransparency = 0.5
+                        highlight.OutlineTransparency = 0
+                        highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                        highlight.Adornee = character
+                        highlight.Parent = character
+                    end
+                    highlight.FillColor = BS_Settings.ChamsColor
+                else
+                    if highlight then highlight:Destroy() end
+                end
+                
+                -- Box & Info
+                local rootPart = character:FindFirstChild("HumanoidRootPart")
+                if rootPart then
+                    local billboard = rootPart:FindFirstChild("BS_ESP_Info")
+                    if BS_Settings.Boxes or BS_Settings.HP or BS_Settings.Nickname then
+                        if not billboard then
+                            billboard = Instance.new("BillboardGui")
+                            billboard.Name = "BS_ESP_Info"
+                            billboard.Size = UDim2.new(4, 0, 5, 0)
+                            billboard.AlwaysOnTop = true
+                            billboard.Adornee = rootPart
+                            
+                            local frame = Instance.new("Frame")
+                            frame.Name = "BoxFrame"
+                            frame.Size = UDim2.new(1, 0, 1, 0)
+                            frame.BackgroundTransparency = 1
+                            frame.Parent = billboard
+                            
+                            local stroke = Instance.new("UIStroke")
+                            stroke.Name = "BoxStroke"
+                            stroke.Thickness = 1.5
+                            stroke.Parent = frame
+                            
+                            local infoText = Instance.new("TextLabel")
+                            infoText.Name = "InfoText"
+                            infoText.Size = UDim2.new(1, 0, 0, 40)
+                            infoText.Position = UDim2.new(0, 0, 0, -42)
+                            infoText.BackgroundTransparency = 1
+                            infoText.Font = Enum.Font.GothamBold
+                            infoText.TextSize = 11
+                            infoText.TextStrokeTransparency = 0.5
+                            infoText.Parent = billboard
+                            
+                            billboard.Parent = rootPart
+                        end
+                        
+                        local frame = billboard:FindFirstChild("BoxFrame")
+                        if frame then
+                            local stroke = frame:FindFirstChild("BoxStroke")
+                            if stroke then
+                                stroke.Enabled = BS_Settings.Boxes
+                                stroke.Color = BS_Settings.BoxesColor
+                            end
+                        end
+                        
+                        local infoText = billboard:FindFirstChild("InfoText")
+                        if infoText then
+                            local textParts = {}
+                            if BS_Settings.Nickname then table.insert(textParts, player.Name) end
+                            if BS_Settings.HP then table.insert(textParts, "[" .. math.floor(character.Humanoid.Health) .. " HP]") end
+                            infoText.Text = table.concat(textParts, " ")
+                            infoText.TextColor3 = BS_Settings.NickColor
+                        end
+                    else
+                        if billboard then billboard:Destroy() end
+                    end
+                end
+                
+            end
+        end
     end
 end)
+
+-- 2. Аимбот (Наводка при зажатой ПКМ)
+local function getClosestEnemy()
+    local closest = nil
+    local shortestDistance = BS_Settings.AimFov
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= localPlayer then
+            local char = player.Character
+            if char and char:FindFirstChild("Head") and char:FindFirstChild("Humanoid") and char.Humanoid.Health > 0 then
+                local headPos, onScreen = Camera:WorldToViewportPoint(char.Head.Position)
+                if onScreen then
+                    local mousePos = UserInputService:GetMouseLocation()
+                    local dist = (Vector2.new(headPos.X, headPos.Y) - mousePos).Magnitude
+                    if dist < shortestDistance then
+                        shortestDistance = dist
+                        closest = char.Head
+                    end
+                end
+            end
+        end
+    end
+    return closest
+end
+
+RunService.RenderStepped:Connect(function()
+    if BS_Settings.AimbotEnabled and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
+        local targetHead = getClosestEnemy()
+        if targetHead then
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetHead.Position)
+        end
+    end
+end)
+
+-- 3. Auto BHop (Прыжки)
+RunService.RenderStepped:Connect(function()
+    if BS_Settings.BHopEnabled and UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+        local char = localPlayer.Character
+        if char and char:FindFirstChild("Humanoid") then
+            if char.Humanoid.FloorMaterial ~= Enum.Material.Air then
+                char.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end
+    end
+end)
+
+-- =================================================================
+-- 5. ИНТЕРАКТИВНОСТЬ (ПЕРЕТАСКИВАНИЕ И KEYBIND 'G')
+-- =================================================================
+local dragging, dragStart, startPos
+TopBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+-- Клавиша G для открытия/закрытия
+UserInputService.InputBegan:Connect(function(input, gp)
+    if not gp and input.KeyCode == Enum.KeyCode.G then
+        MainFrame.Visible = not MainFrame.Visible
+    end
+end)
+
+print("[BloxStrike Hub] Успешно загружен!")
