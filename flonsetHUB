@@ -200,3 +200,121 @@ end
 -- Пример интеграции с твоей переменной видимости окна (MainFrame):
 -- Вызывай updateInputLock(MainFrame.Visible) при открытии/закрытии или по нажат
 ию G
+
+-- language: Luau, file: bloxstrike_esp_section.lua, target: Roblox, Project Real / Wave
+-- *Smoothly expandable ESP section with Chams, Box, HP, Nickname and color customization*
+
+local TweenService = game:GetService("TweenService")
+
+-- Предполагается, что VisualTab у тебя уже создан из предыдущего кода
+-- Создаем главную кнопку-спойлер для ESP
+local EspDropdown = Instance.new("TextButton")
+EspDropdown.Size = UDim2.new(1, -10, 0, 40)
+EspDropdown.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+EspDropdown.Font = Enum.Font.GothamBold
+EspDropdown.Text = "  ▼  ESP Settings"
+EspDropdown.TextColor3 = Color3.fromRGB(255, 255, 255)
+EspDropdown.TextSize = 13
+EspDropdown.TextXAlignment = Enum.TextXAlignment.Left
+EspDropdown.Parent = VisualTab
+
+local DropCorner = Instance.new("UICorner")
+DropCorner.CornerRadius = UDim.new(0, 6)
+DropCorner.Parent = EspDropdown
+
+-- Контейнер для элементов ESP (который будет плавно раскрываться)
+local EspContainer = Instance.new("Frame")
+EspContainer.Size = UDim2.new(1, -10, 0, 0) -- Начинаем с высоты 0 (закрыто)
+EspContainer.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+EspContainer.BackgroundTransparency = 0.5
+EspContainer.BorderSizePixel = 0
+EspContainer.ClipsDescendants = true -- Обрезает всё, что выходит за рамки при сворачивании
+EspContainer.Parent = VisualTab
+
+local ContainerCorner = Instance.new("UICorner")
+ContainerCorner.CornerRadius = UDim.new(0, 6)
+ContainerCorner.Parent = EspContainer
+
+local EspLayout = Instance.new("UIListLayout")
+EspLayout.SortOrder = Enum.SortOrder.LayoutIndex
+EspLayout.Padding = UDim.new(0, 6)
+EspLayout.Parent = EspContainer
+
+-- Функция для добавления элементов управления внутрь ESP секции
+local function createToggleWithColor(name, defaultColor, callback)
+    local ItemFrame = Instance.new("Frame")
+    ItemFrame.Size = UDim2.new(1, 0, 0, 32)
+    ItemFrame.BackgroundTransparency = 1
+    ItemFrame.Parent = EspContainer
+    
+    local ToggleBtn = Instance.new("TextButton")
+    ToggleBtn.Size = UDim2.new(0.7, 0, 1, 0)
+    ToggleBtn.Position = UDim2.new(0, 5, 0, 0)
+    ToggleBtn.BackgroundTransparency = 1
+    ToggleBtn.Font = Enum.Font.GothamSemibold
+    ToggleBtn.Text = "  [ ] " .. name
+    ToggleBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    ToggleBtn.TextSize = 12
+    ToggleBtn.TextXAlignment = Enum.TextXAlignment.Left
+    ToggleBtn.Parent = ItemFrame
+    
+    -- Простейший выбор цвета (цветной квадратик справа)
+    local ColorBtn = Instance.new("TextButton")
+    ColorBtn.Size = UDim2.new(0, 24, 0, 20)
+    ColorBtn.Position = UDim2.new(1, -34, 0.5, -10)
+    ColorBtn.BackgroundColor3 = defaultColor
+    ColorBtn.Text = ""
+    ColorBtn.Parent = ItemFrame
+    
+    local ColorCorner = Instance.new("UICorner")
+    ColorCorner.CornerRadius = UDim.new(0, 4)
+    ColorCorner.Parent = ColorBtn
+    
+    local enabled = false
+    ToggleBtn.MouseButton1Click:Connect(function()
+        enabled = not enabled
+        if enabled then
+            ToggleBtn.Text = "  [✓] " .. name
+            ToggleBtn.TextColor3 = Color3.fromRGB(0, 255, 128)
+        else
+            ToggleBtn.Text = "  [ ] " .. name
+            ToggleBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+        end
+        callback(enabled, ColorBtn.BackgroundColor3)
+    end)
+end
+
+-- Создаем функции и элементы внутри ESP меню
+createToggleWithColor("Chams", Color3.fromRGB(0, 170, 255), function(state, col)
+    print("Chams:", state, col)
+end)
+
+createToggleWithColor("Boxes", Color3.fromRGB(0, 255, 128), function(state, col)
+    print("Boxes:", state, col)
+end)
+
+createToggleWithColor("Health Bar (HP)", Color3.fromRGB(50, 255, 50), function(state, col)
+    print("HP:", state, col)
+end)
+
+createToggleWithColor("Nicknames", Color3.fromRGB(255, 255, 255), function(state, col)
+    print("Nickname:", state, col)
+end)
+
+-- Логика плавного раскрытия (анимация через TweenService)
+local isOpen = false
+EspDropdown.MouseButton1Click:Connect(function()
+    isOpen = not isOpen
+    
+    -- Считаем реальную высоту в зависимости от количества элементов (4 элемента по ~32 пикселя + отступы)
+    local targetHeight = isOpen and 150 or 0
+    local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    
+    TweenService:Create(EspContainer, tweenInfo, {Size = UDim2.new(1, -10, 0, targetHeight)}):Play()
+    
+    if isOpen then
+        EspDropdown.Text = "  ▲  ESP Settings"
+    else
+        EspDropdown.Text = "  ▼  ESP Settings"
+    end
+end)
