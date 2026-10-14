@@ -1,0 +1,156 @@
+-- language: Luau, file: mm2_hub_gui.lua, target: Roblox, Synapse/Velocity/Wave
+-- *UI framework with tabbed navigation and toggle controls*
+
+local CoreGui = game:GetService("CoreGui")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+-- Parent UI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "MM2HubUI"
+ScreenGui.ResetOnSpawn = false
+if syn and syn.protect_gui then
+    syn.protect_gui(ScreenGui)
+    ScreenGui.Parent = CoreGui
+else
+    ScreenGui.Parent = CoreGui
+end
+
+-- Main Window Frame
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 580, 0, 360)
+MainFrame.Position = UDim2.new(0.5, -290, 0.5, -180)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 24)
+MainFrame.BorderSizePixel = 0
+MainFrame.ClipsDescendants = true
+MainFrame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = MainFrame
+
+-- Dragging logic
+local dragging, dragInput, dragStart, startPos
+MainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+    end
+end)
+MainFrame.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+-- Header Bar
+local Header = Instance.new("Frame")
+Header.Size = UDim2.new(1, 0, 0, 35)
+Header.BackgroundColor3 = Color3.fromRGB(28, 28, 34)
+Header.BorderSizePixel = 0
+Header.Parent = MainFrame
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, -20, 1, 0)
+Title.Position = UDim2.new(0, 15, 0, 0)
+Title.Text = "MM2 HUB"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Font = Enum.Font.Garamond
+Title.TextSize = 18
+Title.BackgroundTransparency = 1
+Title.Parent = Header
+
+-- Sidebar Container
+local Sidebar = Instance.new("Frame")
+Sidebar.Size = UDim2.new(0, 130, 1, -35)
+Sidebar.Position = UDim2.new(0, 0, 0, 35)
+Sidebar.BackgroundColor3 = Color3.fromRGB(24, 24, 28)
+Sidebar.BorderSizePixel = 0
+Sidebar.Parent = MainFrame
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 4)
+UIListLayout.Parent = Sidebar
+
+local UIPadding = Instance.new("UIPadding")
+UIPadding.PaddingTop = UDim.new(0, 8)
+UIPadding.PaddingLeft = UDim.new(0, 8)
+UIPadding.PaddingRight = UDim.new(0, 8)
+UIPadding.Parent = Sidebar
+
+-- Content Pages Container
+local ContentArea = Instance.new("Frame")
+ContentArea.Size = UDim2.new(1, -130, 1, -35)
+ContentArea.Position = UDim2.new(0, 130, 0, 35)
+ContentArea.BackgroundTransparency = 1
+ContentArea.Parent = MainFrame
+
+local tabs = {"Target", "Visual", "Misc", "Player", "Setting"}
+local pages = {}
+
+for _, tabName in ipairs(tabs) do
+    local page = Instance.new("ScrollingFrame")
+    page.Name = tabName .. "Page"
+    page.Size = UDim2.new(1, -16, 1, -16)
+    page.Position = UDim2.new(0, 8, 0, 8)
+    page.BackgroundTransparency = 1
+    page.BorderSizePixel = 0
+    page.ScrollBarThickness = 3
+    page.Visible = false
+    page.Parent = ContentArea
+
+    local pageLayout = Instance.new("UIListLayout")
+    pageLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    pageLayout.Padding = UDim.new(0, 6)
+    pageLayout.Parent = page
+
+    pages[tabName] = page
+
+    local button = Instance.new("TextButton")
+    button.Name = tabName .. "Btn"
+    button.Size = UDim2.new(1, 0, 0, 30)
+    button.BackgroundColor3 = Color3.fromRGB(32, 32, 38)
+    button.Text = tabName
+    button.TextColor3 = Color3.fromRGB(180, 180, 190)
+    button.Font = Enum.Font.SourceSans
+    button.TextSize = 14
+    button.BorderSizePixel = 0
+    button.Parent = Sidebar
+
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 4)
+    btnCorner.Parent = button
+
+    button.MouseButton1Click:Connect(function()
+        for _, p in pairs(pages) do p.Visible = false end
+        for _, b in ipairs(Sidebar:GetChildren()) do
+            if b:IsA("TextButton") then
+                b.BackgroundColor3 = Color3.fromRGB(32, 32, 38)
+                b.TextColor3 = Color3.fromRGB(180, 180, 190)
+            end
+        end
+        page.Visible = true
+        button.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+        button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    end)
+end
+
+-- Default tab view
+if pages["Target"] then
+    pages["Target"].Visible = true
+    local firstBtn = Sidebar:FindFirstChild("TargetBtn")
+    if firstBtn then
+        firstBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+        firstBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    end
+end
